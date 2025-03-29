@@ -7,10 +7,16 @@ Experimental state: Only planes are implemented! Holes are not supported!
 ![screenshot of the output screw.step imported into FreeCAD](screw_step.png)
 
 
+## Installation
+
+```bash
+pip3 install stl2step
+```
+
 ## Usage
 
 ```bash
-python3 stl2step myfile.stl
+python3 -m stl2step myfile.stl
 ```
 
 The out file is named similar to the input file: `myfile.step`, because it only replaces `.stl` with `.step`.
