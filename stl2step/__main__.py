@@ -55,25 +55,43 @@ def sort_edges(edges_merged):
     return sorted_edges
 
 
+def read_stl(filename: str):
+    input_mesh = mesh.Mesh.from_file(filename)
+    return np.array([[roundvec(f) for f in e] for e in input_mesh.vectors])
+
+
+def construct_relations_pnts_faces(faces):
+    pnt2face_idx_lst = {(f[0], f[1], f[2]): [] for e in faces for f in e}
+    for i, e in enumerate(faces):
+        for f in e:
+            pnt2face_idx_lst[(f[0], f[1], f[2])].append(i)
+    return list(pnt2face_idx_lst.keys()), list(pnt2face_idx_lst.values())
+
+
+def invert_relation(relation, number_of_bins):
+    inv_rel = [[] for i in range(number_of_bins)]
+    for i, r in enumerate(relation):
+        for e in r:
+            inv_rel[e].append(i)
+    return inv_rel
+
+
 if __name__ == "__main__":
 
     filename = sys.argv[1]
 
-    input_mesh = mesh.Mesh.from_file(filename)
-    faces = [[roundvec(f) for f in e] for e in input_mesh.vectors]
-    pnt2face_idx_lst = {(f[0], f[1], f[2]): [] for e in faces for f in e}
+    faces = read_stl(filename)
 
+    number_of_faces = faces.shape[0]
+
+    pnt2face_idx_lst = {(f[0], f[1], f[2]): [] for e in faces for f in e}
     for i, e in enumerate(faces):
         for f in e:
             pnt2face_idx_lst[(f[0], f[1], f[2])].append(i)
 
-    pnts = list(pnt2face_idx_lst.keys())
+    pnts, pnt_idx2face_idx_lst = construct_relations_pnts_faces(faces)
 
-    pnt_idx2face_idx_lst = list(pnt2face_idx_lst.values())
-    face_idx2pnt_idx_lst = [[] for i in range(max(map(max, pnt_idx2face_idx_lst)) + 1)]
-    for i, face_idx_lst in enumerate(pnt_idx2face_idx_lst):
-        for face_idx in face_idx_lst:
-            face_idx2pnt_idx_lst[face_idx].append(i)
+    face_idx2pnt_idx_lst = invert_relation(pnt_idx2face_idx_lst, number_of_faces)
 
     edge2faces_idx = {}
     for j, f in enumerate(face_idx2pnt_idx_lst):
@@ -94,12 +112,8 @@ if __name__ == "__main__":
 
     edge_idx2edge = list(edge2faces_idx.keys())
     edge_idx2faces_idx = list(edge2faces_idx.values())
-    face_idx2edge_idx_list = [
-        [] for i in range(max(map(max, pnt_idx2face_idx_lst)) + 1)
-    ]
-    for i, f in enumerate(edge_idx2faces_idx):
-        for e in f:
-            face_idx2edge_idx_list[e].append(i)
+
+    face_idx2edge_idx_list = invert_relation(edge_idx2faces_idx, number_of_faces)
 
     faces_arr = np.array(faces)
 
