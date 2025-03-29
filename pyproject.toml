@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Stefan Helmert <stefan@entroserv.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 [tool.poetry]
 name = "stl2step"
 version = "0.0.0+devel"
@@ -17,6 +21,7 @@ pylint = "^3.2.6"
 black = "^24.4.2"
 isort = "^5.13.2"
 pytest = "^8.3.2"
+reuse = "^5.0.2"
 
 [tool.isort]
 line_length = 79

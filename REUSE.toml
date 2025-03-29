@@ -1,0 +1,38 @@
+version = 1
+
+# source and test files
+[[annotations]]
+path = [ 
+    "stl2step/*.py",
+    "tests/*.py",
+    ".github/**",
+    "experiments/**"
+]
+SPDX-FileCopyrightText = "2025 Stefan Helmert <stefan@entroserv.de>"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = "*.png"
+SPDX-FileCopyrightText = "2025 Stefan Helmert <stefan@entroserv.de>"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# A recursive glob of all files and directories in tests/resources/,
+# and the REUSE information of these files is overridden.
+[[annotations]]
+path = [
+    "tests/resources/**",
+    ".gitignore"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2025 Stefan Helmert <stefan@entroserv.de>"
+SPDX-License-Identifier = "CC0-1.0"
+
+# Two computer-generated files.
+[[annotations]]
+path = [
+    "poetry.lock",
+    "requirements.txt"
+]
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"
+

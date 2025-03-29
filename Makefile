@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Stefan Helmert <stefan@entroserv.de>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 .DEFAULT_GOAL := build
 .PHONY: build lint test docs package deploy
 PROJ_SLUG = stl2step
@@ -13,6 +17,7 @@ build:
 lint:
 	poetry run black --check .
 	poetry run isort --check .
+	poetry run reuse lint
 
 test: clean
 	mkdir -p build
@@ -40,6 +45,9 @@ clean:
 	rm -rf __pycache__ \
 	rm -rf $(PROJ_SLUG)/__pycache__ \
 	rm -rf tests/__pycache__
+	rm -rf stl2step.dist
+	rm -rf stl2step.build
+	rm -f tests/resources/*.step
 	#rm -rf docs/build \
 	rm -rf *.egg-info \
 	rm -rf docs/source/modules \
