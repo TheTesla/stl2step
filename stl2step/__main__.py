@@ -179,7 +179,6 @@ if __name__ == "__main__":
         all_polygons[e] if e >= 0 else all_polygons[-e][::-1] for e in poly_res
     ]
 
-    print(all_poly_correct)
 
     all_poly_coord = [[pnts[f] for f in e] for e in all_poly_correct]
 
