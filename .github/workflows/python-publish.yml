@@ -22,6 +22,8 @@ jobs:
       run: |
         python3 -m pip install poetry
         poetry install --only main
+    - name: Prepair publish
+      run: make prepair-publish
     - name: Build package
       run: make build
     - name: Publish package
