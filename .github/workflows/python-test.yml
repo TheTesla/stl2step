@@ -23,7 +23,6 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install poetry
-        sudo apt-get install -y admesh
         poetry install
     - name: Lint with black and isort
       run: |
