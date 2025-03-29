@@ -1,0 +1,30 @@
+name: Upload stl2step Python Package
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12'
+    - name: Install dependencies
+      run: |
+        python3 -m pip install poetry
+        poetry install --only main
+    - name: Build package
+      run: make build
+    - name: Publish package
+      run:
+        poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+

@@ -1,0 +1,34 @@
+name: stl2step
+
+on:
+  push:
+    branches: [ "master", "ci" ]
+  pull_request:
+    branches: [ "master", "ci" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+    - name: Install dependencies
+      run: |
+        python3 -m pip install poetry
+        sudo apt-get install -y admesh
+        poetry install
+    - name: Lint with black and isort
+      run: |
+        make lint
+    - name: Test with pytest
+      run: |
+        make test
+

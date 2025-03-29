@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "stl2step"
+version = "0.0.0+devel"
+description = "Non-trivial conversion of STL files into STEP files."
+authors = ["Stefan Helmert <stefan@entroserv.de>"]
+license = "AGPLv3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^1.23.5"
+numpy-stl = "^3.1.1"
+cadquery = "^2.4.0"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.2.6"
+black = "^24.4.2"
+isort = "^5.13.2"
+pytest = "^8.3.2"
+
+[tool.isort]
+line_length = 79
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
