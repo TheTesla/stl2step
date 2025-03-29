@@ -5,7 +5,7 @@ import sys
 
 
 def roundvec(x):
-    return np.round(x*10000.)/10000.
+    return np.round(x*100000000.)/100000000.
 
 
 filename = sys.argv[1]
@@ -36,7 +36,10 @@ for j, f in enumerate(face_idx2pnt_idx_lst):
         elif f[i-1] > f[i]:
             edge = (f[i], f[i-1])
         else:
-            raise BaseException("edge with one point only")
+            print("edge with one point only")
+            print((f[i-1], f[i]))
+            continue
+            #raise BaseException("edge with one point only")
 
         if edge not in edge2faces_idx:
             edge2faces_idx[edge] = []
@@ -76,6 +79,8 @@ def cluster_planes(faces_arr):
     v = roundvec(np.column_stack((nrm2, dist)))
     clust = {(e[0], e[1], e[2], e[3]): [] for e in v}
     for i, e in enumerate(v):
+        if np.isnan(e[0]):
+            continue
         clust[(e[0], e[1], e[2], e[3])].append(i)
     return list(clust.values())
 
