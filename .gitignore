@@ -113,5 +113,5 @@ travis.log
 
 
 
-*.stl
-*.step
+#*.stl
+#*.step
