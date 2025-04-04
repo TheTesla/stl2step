@@ -11,7 +11,7 @@ license = "AGPLv3"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.9"
 numpy = "^1.23.5"
 numpy-stl = "^3.1.1"
 cadquery = "^2.4.0"
