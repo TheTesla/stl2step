@@ -31,7 +31,7 @@ package: clean docs
 	poetry build
 
 prepair-publish:
-	sed -i "s/screw_step.png/https:\/\/raw.githubusercontent.com\/TheTesla\/stl2step\/refs\/tags\/$(version)\/screw_step.png/g" README.md
+	sed -i "s/screw_step.png/https:\/\/raw.githubusercontent.com\/TheTesla\/stl2step\/refs\/tags\/$(version)\/example_step.png/g" README.md
 
 publish:
 	poetry publish
