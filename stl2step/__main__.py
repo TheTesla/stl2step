@@ -6,7 +6,7 @@ from stl import mesh
 
 
 def roundvec(x):
-    return np.round(x * 100000000.0) / 100000000.0
+    return np.round(x * 1000000.0) / 1000000.0
 
 
 def read_stl(filename: str):
@@ -110,38 +110,6 @@ def find_edges_of_polygons(polygons):
     return edge2polygon_idx
 
 
-def correct_polygon_orientation(polygons):
-    edge2polygon_idx = find_edges_of_polygons(polygons)
-    all_poly_idx_set = set(range(len(polygons)))
-    nxt_polys = set({0})
-    poly_res = []
-    while len(nxt_polys) > 0:
-        current_poly_idx = nxt_polys.pop()
-        if current_poly_idx >= 0:
-            current_poly = polygons[current_poly_idx]
-        else:
-            current_poly = polygons[-current_poly_idx][::-1]
-        for i in range(len(current_poly)):
-            edge = (current_poly[i], current_poly[i - 1])
-            edge_wrong = (current_poly[i - 1], current_poly[i])
-            adjacent_poly = edge2polygon_idx[edge]
-            adjacent_poly_wrong = edge2polygon_idx[edge_wrong]
-            for e in adjacent_poly:
-                if e != i:
-                    if e in all_poly_idx_set:
-                        nxt_polys.add(e)
-                        all_poly_idx_set.remove(e)
-                        poly_res.append(e)
-            for e in adjacent_poly_wrong:
-                if e != i:
-                    if e in all_poly_idx_set:
-                        nxt_polys.add(-e)
-                        all_poly_idx_set.remove(e)
-                        poly_res.append(-e)
-    all_poly_correct = [polygons[e] if e >= 0 else polygons[-e][::-1] for e in poly_res]
-    return all_poly_correct
-
-
 def merge_faces(faces_lst, face_idx2edge_idx_list, edge_idx2edge):
     edges_idx_merged_list = [
         list(merge_poly(f, face_idx2edge_idx_list)) for f in faces_lst
@@ -158,13 +126,15 @@ def merge_faces(faces_lst, face_idx2edge_idx_list, edge_idx2edge):
             sorted_edges_polygons.append(sorted_edges)
         planes.append(sorted_edges_polygons)
     planes_polygons_pts_idx = [
-            [
         [
-            (set(sorted_edges[i - 1]).intersection(set(sorted_edges[i]))).pop()
-            for i in range(len(sorted_edges))
+            [
+                (set(sorted_edges[i - 1]).intersection(set(sorted_edges[i]))).pop()
+                for i in range(len(sorted_edges))
+            ]
+            for sorted_edges in sorted_edges_polygons
         ]
-        for sorted_edges in sorted_edges_polygons
-    ] for sorted_edges_polygons in planes]
+        for sorted_edges_polygons in planes
+    ]
     return planes_polygons_pts_idx
 
 
@@ -178,14 +148,29 @@ def get_unclassified_faces(all_faces, classified_faces_lst):
 
 def make_cq_poly_wire(poly_coords):
     wire = cq.Wire.makePolygon(
-                [[c for c in poly_coords[i - 1]] for i in range(len(poly_coords))], close=True
-            )
+        [[c for c in poly_coords[i - 1]] for i in range(len(poly_coords))], close=True
+    )
     return wire
 
+
+# Thanks to CadQuery and OCCT: It works even with messed up outer <-> inner Wire. Even,
+# if there are multiple outer wire (multiple polygons), it works, if they are
+# fed to the inner Wires argument. The function definition shows, outer and
+# inner Wire are just concatened to one list being analyzed and corrected by CadQuery or OCCT later.
+#
+# The orientation (concave or convex) of the faces doesn't need to be correct.
+# It is also corrected by CadQuery of OCCT.
 def make_cq_poly_faces(poly_coords):
-    return [cq.Face.makeFromWires(make_cq_poly_wire(e[0]),
-                                  [make_cq_poly_wire(e[1])] if len(e)>1 else []
-                                  ) for e in poly_coords]
+    return [
+        cq.Face.makeFromWires(
+            make_cq_poly_wire(e[0]), [make_cq_poly_wire(f) for f in e[1:]]
+        )
+        for e in poly_coords
+    ]
+
+
+def count_len(lst):
+    return np.unique(np.array([len(e) for e in lst]), return_counts=True)
 
 
 if __name__ == "__main__":
@@ -195,7 +180,7 @@ if __name__ == "__main__":
     filename = sys.argv[1]
     print(f"Reading file: {filename}")
     faces = read_stl(filename)
-    print(f"Number of input triangles: {len(faces)}")
+    print(f"Number of input triangles: {len(faces):13d}")
 
     # prepare input data
     number_of_faces = faces.shape[0]
@@ -206,27 +191,27 @@ if __name__ == "__main__":
 
     # find planes
     faces_to_be_merged_list = cluster_planes(faces)
-    print(f"Number of planes found: {len(faces_to_be_merged_list)}")
+    print(f"Number of planes found: {len(faces_to_be_merged_list):16d}")
+    unique, counts = count_len(faces_to_be_merged_list)
+    for i, c in enumerate(unique):
+        print(f"  with {c:6d} polygon{'s:' if c != 1 else ': '} {counts[i]:16d}")
 
     # construct polygons of planes
     polygons_pts_idx = merge_faces(
         faces_to_be_merged_list, face_idx2edge_idx_list, edge_idx2edge
     )
 
-    print(polygons_pts_idx)
-
     # construct remaining unclassified triangles
     remaining_faces = get_unclassified_faces(
         face_idx2pnt_idx_lst, faces_to_be_merged_list
     )
-    print(f"Number of remaining triangles: {len(remaining_faces)}")
+    print(f"Number of remaining triangles: {len(remaining_faces):9d}")
 
     # build surface from planes and remaining triangles
     all_polygons = polygons_pts_idx + [[e] for e in remaining_faces]
-    print(all_polygons)
-    all_poly_correct = all_polygons
-    #all_poly_correct = correct_polygon_orientation(all_polygons)
-    all_poly_coord = [[[pnts[pnt] for pnt in poly] for poly in plane] for plane in all_poly_correct]
+    all_poly_coord = [
+        [[pnts[pnt] for pnt in poly] for poly in plane] for plane in all_polygons
+    ]
     cq_plane_faces = make_cq_poly_faces(all_poly_coord)
 
     shell = cq.Shell.makeShell(cq_plane_faces)
