@@ -144,25 +144,28 @@ def correct_polygon_orientation(polygons):
 
 def merge_faces(faces_lst, face_idx2edge_idx_list, edge_idx2edge):
     edges_idx_merged_list = [
-        [e for e in list(merge_poly(f, face_idx2edge_idx_list))] for f in faces_lst
+        list(merge_poly(f, face_idx2edge_idx_list)) for f in faces_lst
     ]
     edges_merged_list = [
         [edge_idx2edge[e] for e in edges_idx_merged]
         for edges_idx_merged in edges_idx_merged_list
     ]
-    sorted_edges_polygons = []
+    planes = []
     for edges_merged in edges_merged_list:
+        sorted_edges_polygons = []
         while len(edges_merged) > 0:
             sorted_edges = sort_edges(edges_merged)
             sorted_edges_polygons.append(sorted_edges)
-    polygons_pts_idx = [
+        planes.append(sorted_edges_polygons)
+    planes_polygons_pts_idx = [
+            [
         [
             (set(sorted_edges[i - 1]).intersection(set(sorted_edges[i]))).pop()
             for i in range(len(sorted_edges))
         ]
         for sorted_edges in sorted_edges_polygons
-    ]
-    return polygons_pts_idx
+    ] for sorted_edges_polygons in planes]
+    return planes_polygons_pts_idx
 
 
 def get_unclassified_faces(all_faces, classified_faces_lst):
@@ -173,15 +176,16 @@ def get_unclassified_faces(all_faces, classified_faces_lst):
     return unclassified_faces
 
 
-def make_cq_poly_faces(poly_coords):
-    wire = []
-    for p in poly_coords:
-        wire.append(
-            cq.Wire.makePolygon(
-                [[c for c in p[i - 1]] for i in range(len(p))], close=True
+def make_cq_poly_wire(poly_coords):
+    wire = cq.Wire.makePolygon(
+                [[c for c in poly_coords[i - 1]] for i in range(len(poly_coords))], close=True
             )
-        )
-    return [cq.Face.makeFromWires(e, []) for e in wire]
+    return wire
+
+def make_cq_poly_faces(poly_coords):
+    return [cq.Face.makeFromWires(make_cq_poly_wire(e[0]),
+                                  [make_cq_poly_wire(e[1])] if len(e)>1 else []
+                                  ) for e in poly_coords]
 
 
 if __name__ == "__main__":
@@ -209,6 +213,8 @@ if __name__ == "__main__":
         faces_to_be_merged_list, face_idx2edge_idx_list, edge_idx2edge
     )
 
+    print(polygons_pts_idx)
+
     # construct remaining unclassified triangles
     remaining_faces = get_unclassified_faces(
         face_idx2pnt_idx_lst, faces_to_be_merged_list
@@ -216,9 +222,11 @@ if __name__ == "__main__":
     print(f"Number of remaining triangles: {len(remaining_faces)}")
 
     # build surface from planes and remaining triangles
-    all_polygons = polygons_pts_idx + remaining_faces
-    all_poly_correct = correct_polygon_orientation(all_polygons)
-    all_poly_coord = [[pnts[f] for f in e] for e in all_poly_correct]
+    all_polygons = polygons_pts_idx + [[e] for e in remaining_faces]
+    print(all_polygons)
+    all_poly_correct = all_polygons
+    #all_poly_correct = correct_polygon_orientation(all_polygons)
+    all_poly_coord = [[[pnts[pnt] for pnt in poly] for poly in plane] for plane in all_poly_correct]
     cq_plane_faces = make_cq_poly_faces(all_poly_coord)
 
     shell = cq.Shell.makeShell(cq_plane_faces)
