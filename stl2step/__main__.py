@@ -40,7 +40,9 @@ def cluster_planes(faces_arr):
         if np.isnan(e[0]):
             continue
         clust[(e[0], e[1], e[2], e[3])].append(i)
-    return list(clust.values())
+    # remove all planes with a single triangle only
+    filtered = {k: v for k, v in clust.items() if len(v) > 1}
+    return list(filtered.values())
 
 
 def sort_edges(edges_merged):
@@ -192,14 +194,14 @@ if __name__ == "__main__":
     # find planes
     faces_to_be_merged_list = cluster_planes(faces)
     print(f"Number of planes found: {len(faces_to_be_merged_list):16d}")
-    unique, counts = count_len(faces_to_be_merged_list)
-    for i, c in enumerate(unique):
-        print(f"  with {c:6d} polygon{'s:' if c != 1 else ': '} {counts[i]:16d}")
 
     # construct polygons of planes
     polygons_pts_idx = merge_faces(
         faces_to_be_merged_list, face_idx2edge_idx_list, edge_idx2edge
     )
+    unique, counts = count_len(polygons_pts_idx)
+    for i, c in enumerate(unique):
+        print(f"  with {c:6d} polygon{'s:' if c != 1 else ': '} {counts[i]:16d}")
 
     # construct remaining unclassified triangles
     remaining_faces = get_unclassified_faces(

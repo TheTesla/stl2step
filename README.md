@@ -8,9 +8,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 This cli program converts STL files into STEP file in a non-trivial way. It segments the mesh into basic shapes. That means, the generated STEP file isn't only a bunch of triangles, it has planes, cylinders, spheres etc. resulting in less memory usage and it is friendlier to CAD and CAM. 
 
-Experimental state: Only planes are implemented! Holes are not supported!
+Experimental state: Only planes are implemented! Holes __are__ supported now!
 
-![screenshot of the output screw.step imported into FreeCAD](screw_step.png)
+![screenshot of the output step file imported into FreeCAD and the conversion log](example_step.png)
 
 
 ## Installation
