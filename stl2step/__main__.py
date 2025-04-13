@@ -175,6 +175,45 @@ def count_len(lst):
     return np.unique(np.array([len(e) for e in lst]), return_counts=True)
 
 
+def get_2triangle_pacthes(edge_idx2faces_idx, faces):
+    return np.array(
+        [
+            list(
+                set(
+                    [
+                        (p[0], p[1], p[2])
+                        for p in np.concatenate([faces[e[0]], faces[e[1]]])
+                    ]
+                )
+            )
+            for e in edge_idx2faces_idx
+        ]
+    )
+
+
+def calc_circumsphere_center(four_pnts):
+    M = np.vstack(
+        [
+            four_pnts[1] - four_pnts[0],
+            four_pnts[2] - four_pnts[0],
+            four_pnts[3] - four_pnts[0],
+        ]
+    )
+    print(np.linalg.det(M))
+    if np.abs(np.linalg.det(M)) < 1e-10:
+        return np.array([np.nan] * 4)
+    r_vec = 0.5 * np.array(
+        [
+            np.dot(four_pnts[1] - four_pnts[0], four_pnts[1] + four_pnts[0]),
+            np.dot(four_pnts[2] - four_pnts[0], four_pnts[2] + four_pnts[0]),
+            np.dot(four_pnts[3] - four_pnts[0], four_pnts[3] + four_pnts[0]),
+        ]
+    )
+    c = np.linalg.solve(M, r_vec)
+    r = np.linalg.norm(c - four_pnts[0])
+    return np.array([c[0], c[1], c[2], r])
+
+
 if __name__ == "__main__":
     print("stl2step")
 
@@ -190,6 +229,13 @@ if __name__ == "__main__":
     face_idx2pnt_idx_lst = invert_relation(pnt_idx2face_idx_lst, number_of_faces)
     edge_idx2edge, edge_idx2faces_idx = find_edges_of_faces(face_idx2pnt_idx_lst)
     face_idx2edge_idx_list = invert_relation(edge_idx2faces_idx, number_of_faces)
+
+    # print(edge_idx2faces_idx)
+    # print(faces)
+
+    edge_idx24pnts = get_2triangle_pacthes(edge_idx2faces_idx, faces)
+    edge_idx2circ_cntr = [calc_circumsphere_center(e) for e in edge_idx24pnts]
+    print(edge_idx2circ_cntr)
 
     # find planes
     faces_to_be_merged_list = cluster_planes(faces)
